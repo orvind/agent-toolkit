@@ -1,13 +1,14 @@
 # Orvind Agent Toolkit
 
-Orvind's plugin for AI coding agents. It connects your agent to [Orvind](https://orvind.com) so you can work in the Playground from it: browse your campaigns, versions and playables, ask about a game, plan and make changes, play the result and save it as a version.
+Orvind's plugin for AI coding agents. It connects your agent to [Orvind](https://orvind.com) so you can work with your playable ads from it: browse your campaigns, versions and playables, get a link to play one or its file, and in the Playground ask about a game, plan and make changes, and save the result as a version.
 
 ## What's included
 
 | Part | What it is |
 | --- | --- |
 | MCP server `orvind` | `https://mcp.orvind.com`. Signs you in with your Orvind account; the agent then works as you, in the teams you belong to. |
-| Skill `orvind-playground` | The order of work and the rules for the Playground: campaign, then version, then playable; showing a plan before starting a change; previews; saving. |
+| Skill `orvind-playables` | Finding and getting a playable without changing it: campaign, then version, then playable; a link to play it, its file, or its page in the Orvind app. |
+| Skill `orvind-playground` | Asking about and changing a game in the Playground: sessions, showing a plan before starting a change, following an edit, previewing the draft, saving. |
 
 Nothing connects until you sign in from your agent. Starting a change spends your team's credits, as it does in the app, and the agent asks you first.
 
@@ -41,7 +42,7 @@ Then sign in from the agent, and try: "List my Orvind campaigns."
 /plugin install orvind@orvind
 ```
 
-Then run `/mcp`, choose `orvind` and sign in. The skill is available as `/orvind:orvind-playground`, and Claude also uses it on its own when a task matches.
+Then run `/mcp`, choose `orvind` and sign in. The skills are available as `/orvind:orvind-playables` and `/orvind:orvind-playground`, and Claude also uses them on its own when a task matches.
 
 ### Codex
 

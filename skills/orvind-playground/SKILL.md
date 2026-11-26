@@ -1,7 +1,7 @@
 ---
 name: orvind-playground
 description: |
-  How to work in Orvind's Playground through the Orvind MCP server. Use this skill when the user wants to: (1) see their Orvind campaigns, versions or playables; (2) open the Playground on a version or a playable; (3) ask a question about a playable ad's game; (4) ask for a change to a game, review the plan and start the edit; (5) follow, cancel or preview an edit; (6) save a draft as a new version or over an existing one; (7) continue a Playground session that no longer accepts messages. Also use it when an Orvind tool call is refused and the user asks why.
+  How to ask about and change a playable ad's game in Orvind's Playground through the Orvind MCP server. Use this skill when the user wants to: (1) open the Playground on a version or a playable and see its sessions; (2) ask a question about a game; (3) ask for a change to a game, review the plan and start the edit; (4) follow, cancel or preview an edit; (5) save a draft as a new version or over an existing one; (6) continue a Playground session that no longer accepts messages. Also use it when a Playground call is refused and the user asks why. For only finding, playing or downloading a playable with no change, use orvind-playables.
 ---
 
 # Orvind Playground
@@ -27,14 +27,11 @@ Campaign → versions → playables.
 - Each version has **playables**: variants of that version's game with their own settings.
 - The **Playground** runs on a version, or on one playable under a version.
 
-Always work top down, and name what you found at each level so the user can correct you:
+Find the version or playable first, top down, naming what you found at each level so the user can correct you: `list_campaigns` (use `search` when the user named one), `get_campaign` for its versions, and `list_playables` when the user means one playable. The `orvind-playables` skill has the details of finding, and of handing over links and files.
 
-1. `list_campaigns` (use `search` when the user named one).
-2. `get_campaign` for its versions.
-3. `list_playables` for a version's playables, when the user cares about playables.
-4. `get_playground` with a `version_id`, or a `playable_id` to work on one playable.
+Then open the Playground: `get_playground` with a `version_id`, or with a `playable_id` to work on one playable.
 
-"Open the Playground" or "open it in the Playground" means step 4. Do not open a web page or the user's browser for it.
+"Open the Playground" or "open it in the Playground" means that call. Do not open a web page or the user's browser for it.
 
 ## Reading the Playground
 
@@ -79,15 +76,11 @@ An edit takes minutes. `get_run` gives its status and the latest progress lines;
 
 When it is ready, show the result with `get_preview` and the `run_id`.
 
-## Showing a game
+## Showing the result
 
-`get_preview` returns links for an edit's draft (`run_id`), a playable (`playable_id`) or the version as it is (neither):
+`get_preview` with the version and the edit's `run_id` returns the draft's links. Give `play_url` as a named link: it opens the draft in the browser, ready to play, with no sign-in, for an hour. Say that it is a draft and not saved yet.
 
-- `play_url`: give this one. It opens the game in the browser, ready to play, with no sign-in, for an hour.
-- `editor_url`: the Playground's page in the Orvind web app. Give it only when the user asks for the app, and leave opening it to them.
-- `download_url`: the game's single HTML file. Give it only when the user asks for the file.
-
-Present links as named links, not as raw addresses.
+`editor_url` (the Playground's page in the Orvind web app) and `download_url` (the game's HTML file) are for when the user asks for the app or the file. The `orvind-playables` skill covers those, and previews of a version or a playable without an edit.
 
 ## Saving
 

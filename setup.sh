@@ -4,7 +4,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/orvind/agent-toolkit/main/setup.sh | bash
 #
 # For each agent it finds, it adds the Orvind MCP server (https://mcp.orvind.com) and, where the agent supports
-# them, the Orvind plugin and its Playground skill. It needs no password and installs no program: it only calls
+# them, the Orvind plugin and its skills. It needs no password and installs no program: it only calls
 # each agent's own commands and writes that agent's own settings. Nothing connects to an Orvind account until
 # you sign in from the agent afterwards.
 #
@@ -17,8 +17,8 @@ set -euo pipefail
 SERVER_URL="${ORVIND_MCP_URL:-https://mcp.orvind.com}"
 # Where the plugin lives: a GitHub repo, or a local folder when testing a copy before it is published.
 TOOLKIT="${ORVIND_TOOLKIT_SOURCE:-orvind/agent-toolkit}"
-SKILL_URL="${ORVIND_SKILL_URL:-https://raw.githubusercontent.com/orvind/agent-toolkit/main/skills/orvind-playground/SKILL.md}"
-SKILL="orvind-playground"
+SKILLS_URL="${ORVIND_SKILLS_URL:-https://raw.githubusercontent.com/orvind/agent-toolkit/main/skills}"
+SKILLS="orvind-playables orvind-playground"
 
 MODE=setup; YES=0; CLIENTS=()
 while [ $# -gt 0 ]; do
@@ -47,12 +47,17 @@ confirm() {
   local answer; printf '%s [Y/n] ' "$1" > /dev/tty; read -r answer < /dev/tty || return 0
   case "$answer" in n|N|no|No|NO) return 1 ;; *) return 0 ;; esac
 }
-# The skill file: copied from a local toolkit folder, or fetched from the published one.
-skill_into() {
-  local dir="$1/$SKILL"; mkdir -p "$dir"
-  if [ -f "$TOOLKIT/skills/$SKILL/SKILL.md" ]; then cp "$TOOLKIT/skills/$SKILL/SKILL.md" "$dir/SKILL.md"
-  else curl -fsSL "$SKILL_URL" -o "$dir/SKILL.md"; fi
+# The skill files: copied from a local toolkit folder, or fetched from the published one.
+skills_into() {
+  local skill dir
+  for skill in $SKILLS; do
+    dir="$1/$skill"; mkdir -p "$dir"
+    if [ -f "$TOOLKIT/skills/$skill/SKILL.md" ]; then cp "$TOOLKIT/skills/$skill/SKILL.md" "$dir/SKILL.md"
+    else curl -fsSL "$SKILLS_URL/$skill/SKILL.md" -o "$dir/SKILL.md" || return 1; fi
+  done
 }
+skills_in() { local skill; for skill in $SKILLS; do [ -f "$1/$skill/SKILL.md" ] || return 1; done; }
+skills_out() { local skill; for skill in $SKILLS; do rm -rf "${1:?}/$skill"; done; }
 
 # ── Claude Code ─────────────────────────────────────────────────────────────────────────────────────────────────
 claude_plugin() { claude plugin list 2>/dev/null | grep -q 'orvind@orvind'; }
@@ -60,7 +65,7 @@ claude_plugin() { claude plugin list 2>/dev/null | grep -q 'orvind@orvind'; }
 claude_manual() { claude mcp list 2>/dev/null | grep -F "$SERVER_URL" | grep -v '^plugin:' | sed 's/:.*//' | head -1 || true; }
 claude_status() {
   if claude_plugin; then say "  Claude Code: Orvind plugin installed."
-  elif [ -n "$(claude_manual)" ]; then say "  Claude Code: Orvind server added by hand as \"$(claude_manual)\", without the plugin's skill."
+  elif [ -n "$(claude_manual)" ]; then say "  Claude Code: Orvind server added by hand as \"$(claude_manual)\", without the plugin's skills."
   else say "  Claude Code: not set up."; fi
 }
 claude_setup() {
@@ -68,7 +73,7 @@ claude_setup() {
   else
     claude plugin marketplace add "$TOOLKIT" >/dev/null 2>&1 || true
     if claude plugin install orvind@orvind >/dev/null 2>&1; then say "  Claude Code: Orvind plugin installed."
-    elif claude mcp add --scope user --transport http orvind "$SERVER_URL" >/dev/null 2>&1; then say "  Claude Code: the plugin could not be installed, so the Orvind server was added on its own (no skill)."
+    elif claude mcp add --scope user --transport http orvind "$SERVER_URL" >/dev/null 2>&1; then say "  Claude Code: the plugin could not be installed, so the Orvind server was added on its own (no skills)."
     else say "  Claude Code: could not be set up. Add it by hand: claude mcp add --scope user --transport http orvind $SERVER_URL"; return 1; fi
   fi
   local manual; manual="$(claude_manual || true)"
@@ -85,7 +90,7 @@ claude_remove() {
 CODEX_DIR="${CODEX_HOME:-$HOME/.codex}"
 CODEX_SKILLS="$CODEX_DIR/skills"
 codex_has() { codex mcp get orvind >/dev/null 2>&1; }
-codex_status() { if codex_has; then say "  Codex: Orvind server added$([ -f "$CODEX_SKILLS/$SKILL/SKILL.md" ] && echo ', skill installed' || echo ', no skill')."; else say "  Codex: not set up."; fi; }
+codex_status() { if codex_has; then say "  Codex: Orvind server added$(skills_in "$CODEX_SKILLS" && echo ', skills installed' || echo ', skills missing')."; else say "  Codex: not set up."; fi; }
 codex_setup() {
   # Written to Codex's settings file directly: "codex mcp add" would start the browser sign-in and wait for it.
   if ! codex_has; then
@@ -93,10 +98,10 @@ codex_setup() {
     printf '\n[mcp_servers.orvind]\nurl = "%s"\n' "$SERVER_URL" >> "$CODEX_DIR/config.toml"
     codex_has || { say "  Codex: could not add the server. Update Codex, then add it by hand: codex mcp add orvind --url $SERVER_URL"; return 1; }
   fi
-  if skill_into "$CODEX_SKILLS" 2>/dev/null; then say "  Codex: Orvind server and skill installed."; else say "  Codex: Orvind server added. The skill could not be fetched."; fi
+  if skills_into "$CODEX_SKILLS" 2>/dev/null; then say "  Codex: Orvind server and skills installed."; else say "  Codex: Orvind server added. The skills could not be fetched."; fi
   say "    Next: sign in with: codex mcp login orvind"
 }
-codex_remove() { codex mcp remove orvind >/dev/null 2>&1 || true; rm -rf "${CODEX_SKILLS:?}/$SKILL"; say "  Codex: Orvind removed."; }
+codex_remove() { codex mcp remove orvind >/dev/null 2>&1 || true; skills_out "$CODEX_SKILLS"; say "  Codex: Orvind removed."; }
 
 # ── Cursor ──────────────────────────────────────────────────────────────────────────────────────────────────────
 CURSOR_FILE="$HOME/.cursor/mcp.json"
