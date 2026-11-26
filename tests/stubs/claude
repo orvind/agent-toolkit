@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# A stand-in for the claude command, for tests/run.sh. It keeps what was "installed" in $STUB_STATE.
+# STUB_PLUGIN_FAILS=1 makes the plugin install fail, as it does when the marketplace cannot be reached.
+S="${STUB_STATE:?}"; mkdir -p "$S"; touch "$S/servers"
+case "${1:-} ${2:-} ${3:-}" in
+  "plugin list "*) [ -f "$S/plugin" ] && echo "  ❯ orvind@orvind"; exit 0 ;;
+  # As the real command: a marketplace that is already there keeps the branch it was added with.
+  "plugin marketplace add") [ -f "$S/marketplace" ] || echo "${4:-}" > "$S/marketplace"; exit 0 ;;
+  "plugin marketplace list")
+    [ -f "$S/marketplace" ] || { echo "[]"; exit 0; }
+    source="$(cat "$S/marketplace")"; ref=""
+    case "$source" in *@*) ref="${source#*@}"; source="${source%@*}" ;; esac
+    printf '[\n  {\n    "name": "orvind",\n    "source": "github",\n    "repo": "%s",\n' "$source"
+    [ -z "$ref" ] || printf '    "ref": "%s",\n' "$ref"
+    printf '    "installLocation": "/somewhere"\n  }\n]\n'; exit 0 ;;
+  "plugin marketplace update") exit 0 ;;
+  # As the real command: removing a marketplace takes its plugins with it.
+  "plugin marketplace remove") rm -f "$S/marketplace" "$S/plugin"; exit 0 ;;
+  "plugin install "*) [ -z "${STUB_PLUGIN_FAILS:-}" ] || exit 1; touch "$S/plugin"; exit 0 ;;
+  "plugin update "*) exit 0 ;;
+  "plugin uninstall "*) rm -f "$S/plugin"; exit 0 ;;
+  "mcp add "*) url="${*: -1}"; name="${*: -2:1}"; echo "$name: $url (HTTP) - ! Needs authentication" >> "$S/servers"; exit 0 ;;
+  "mcp list "*) cat "$S/servers"; [ -f "$S/plugin" ] && echo "plugin:orvind:orvind: https://mcp.orvind.com (HTTP) - ! Needs authentication"; exit 0 ;;
+  "mcp remove "*) grep -q "^$3:" "$S/servers" || exit 1; grep -v "^$3:" "$S/servers" > "$S/servers.new" || true; mv "$S/servers.new" "$S/servers"; exit 0 ;;
+esac
+echo "stub claude: unexpected: $*" >&2; exit 64

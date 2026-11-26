@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# A stand-in for the codex command, for tests/run.sh. It reads the real settings file the script writes.
+# STUB_CODEX_OLD=1 behaves like a Codex without "codex mcp get": every mcp command fails.
+F="${CODEX_HOME:-$HOME/.codex}/config.toml"
+case "${1:-} ${2:-}" in
+  "mcp get") [ -z "${STUB_CODEX_OLD:-}" ] || exit 2; grep -q "^\[mcp_servers\.${3:-}\]" "$F" 2>/dev/null; exit $? ;;
+  "mcp remove")
+    [ -z "${STUB_CODEX_OLD:-}" ] || exit 2
+    python3 - "$F" "${3:-}" <<'PY'
+import sys
+path, name = sys.argv[1:3]
+kept, skipping = [], False
+for line in open(path).read().splitlines(True):
+    if line.strip().startswith("["): skipping = line.strip() == "[mcp_servers.%s]" % name
+    if not skipping: kept.append(line)
+open(path, "w").write("".join(kept))
+PY
+    exit 0 ;;
+esac
+echo "stub codex: unexpected: $*" >&2; exit 64

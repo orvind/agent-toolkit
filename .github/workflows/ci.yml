@@ -1,0 +1,28 @@
+name: CI
+on:
+  push:
+    branches: [main, release]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    name: Lint and manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint the scripts
+        run: shellcheck --severity=warning setup.sh tests/run.sh tests/check-repo.sh tests/stubs/claude tests/stubs/codex
+      - name: Manifests, versions and skills agree
+        run: bash tests/check-repo.sh
+  setup:
+    name: Setup script (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run setup.sh against stand-in agents
+        run: bash tests/run.sh

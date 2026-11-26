@@ -73,6 +73,8 @@ Rules for the links:
 - If you can run commands on the user's computer and they asked for the file, save it for them, for example `curl -fsSL -o "<name>.html" "<download_url>"`, into the folder they named or the current one, and tell them where it is. Name the file after the campaign, version and playable.
 - Otherwise give the link and say to save it ("Save link as"), then open the saved file to play it.
 
+When `get_preview` returned a `sha256` and you saved the file yourself, check it (`shasum -a 256 "<name>.html"`) and say if it does not match; download it again rather than handing over a file that differs. A playable's built file comes without one, so there is nothing to check.
+
 The file is one HTML page with the whole game inside. Orvind's server gives no other format through these tools; for anything else, point the user to the Orvind web app with `editor_url`.
 
 ## When a playable is not ready

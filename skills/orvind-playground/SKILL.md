@@ -54,8 +54,23 @@ The answer has a `kind`:
 | `declined` | Say why, in the Playground's words. |
 | `change_proposed` | A plan, sometimes with questions that have numbered options. Show the user the plan and the questions. Start nothing yet. |
 | `change_started` | An edit is already running for this message: follow it with `get_run`. |
+| none, and `state` is not `completed` | The reply is not ready yet. Read it with `get_conversation`, as below. |
 
 If the plan does not match what the user asked for, say so and suggest rewording. Do not start it.
+
+### When the reply is not ready
+
+Sometimes `send_message` returns before the Playground has replied: the result has no `kind`, and its `next` says to call `get_conversation`. The message was received. Do not send it again.
+
+Call `get_conversation` with the version and the `session_id` from that result, and read the last message. If it still has no reply, wait a few seconds and call again; a reply can take up to two minutes. Then carry on from its `kind` as in the table above.
+
+`get_conversation` is also how to read what was said earlier in a session before continuing it. It lists the messages oldest first; for earlier ones, pass `before` with the `next_before` of the page you have.
+
+### Sending a message again after a failure
+
+Every result carries a `request_key`. When a call failed and the result says it can be tried again, send exactly the same message with that `request_key`, so it cannot be counted twice. Change nothing else: with a different `session_id`, `playable_id`, wording or `edit_level`, the key is refused as a conflict. To send something different, or to send it in another session, leave `request_key` out.
+
+If the same message fails twice, stop. Tell the user what the tool returned and that the problem looks to be on Orvind's side.
 
 `edit_level` sets how a change is made if the message leads to one: `light` (small tweaks, lowest cost), `standard` (any change, the default) or `express` (any change, much faster, highest cost). Use `standard` unless the user asks otherwise.
 

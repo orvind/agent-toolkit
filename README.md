@@ -17,28 +17,32 @@ Nothing connects until you sign in from your agent. Starting a change spends you
 One command finds Claude Code, Codex and Cursor on your machine and sets up each one:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/orvind/agent-toolkit/main/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/orvind/agent-toolkit/release/setup.sh | bash
 ```
 
-It installs no program and needs no password. It calls each agent's own commands and writes that agent's own settings.
+It installs no program and needs no password. It calls each agent's own commands and writes that agent's own settings. Each agent gets the Orvind server and both skills.
+
+It asks before setting up each agent. Where there is no terminal to ask on (an agent or a CI job running it), it changes nothing unless you add `--yes`.
 
 | Option | What it does |
 | --- | --- |
 | `--status` | Shows what is set up and changes nothing. |
 | `--client claude-code` | Sets up only that agent (`claude-code`, `codex` or `cursor`). Repeat for more than one. |
-| `--yes` | Does not ask before each agent. |
+| `--yes` | Does not ask before each agent. Needed when there is no terminal to ask on. |
 | `--remove` | Takes Orvind out of the agents again. |
 
-To pass an option through the pipe: `curl -fsSL https://raw.githubusercontent.com/orvind/agent-toolkit/main/setup.sh | bash -s -- --status`
+To pass an option through the pipe, put it after `bash -s --`: `curl -fsSL https://raw.githubusercontent.com/orvind/agent-toolkit/release/setup.sh | bash -s -- --status`
 
 Then sign in from the agent, and try: "List my Orvind campaigns."
+
+The script needs `bash`, and `python3` for Cursor. It runs on macOS and Linux. On Windows, run it inside WSL, or set up by hand as below.
 
 ## Set up by hand
 
 ### Claude Code
 
 ```
-/plugin marketplace add orvind/agent-toolkit
+/plugin marketplace add orvind/agent-toolkit@release
 /plugin install orvind@orvind
 ```
 
@@ -51,6 +55,8 @@ codex mcp add orvind --url https://mcp.orvind.com
 codex mcp login orvind
 ```
 
+For the skills, copy the two folders under [`skills/`](skills) into `~/.codex/skills/`.
+
 ### Cursor
 
 In `~/.cursor/mcp.json`:
@@ -58,6 +64,8 @@ In `~/.cursor/mcp.json`:
 ```json
 { "mcpServers": { "orvind": { "url": "https://mcp.orvind.com" } } }
 ```
+
+For the skills, copy the two folders under [`skills/`](skills) into `~/.cursor/skills/`. Cursor also reads `~/.codex/skills/`, so skip this if they are already there.
 
 ### Claude (web and desktop apps)
 
@@ -72,6 +80,12 @@ Add a remote MCP server with the address `https://mcp.orvind.com` and sign in wi
 - **The agent acts as your account.** It can do what you can do in Orvind. Only connect an agent you started yourself.
 - **Starting a change needs your approval** every time. In Claude Code this is a prompt from the app itself.
 - **A saved version is real.** Writing over a version replaces its game and rebuilds its playables; the agent only does that when you say so in your own words.
+
+## Versions
+
+The `release` branch is the published toolkit: the setup command, the skills and the Claude Code plugin all come from it. `main` is where the toolkit is worked on, and a change there reaches nobody until it is released. Each release has a tag (`v0.3.0`) and is listed under [Releases](https://github.com/orvind/agent-toolkit/releases). To update, run the setup command again.
+
+To report a security problem, see [SECURITY.md](SECURITY.md). How a release is made is in [RELEASING.md](RELEASING.md).
 
 ## Licence
 
