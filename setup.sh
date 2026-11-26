@@ -137,12 +137,25 @@ CODEX_SKILLS="$CODEX_DIR/skills"
 codex_has() { codex mcp get orvind >/dev/null 2>&1; }
 # The server as written in Codex's settings file, whether or not this Codex can read it.
 codex_block() { grep -q '^[[:space:]]*\[mcp_servers\.orvind\]' "$CODEX_FILE" 2>/dev/null; }
+# What Codex asks for when it signs in. Left to itself it asks for everything Orvind's sign-in offers, an identity
+# token (openid) among them, and the sign-in then fails; it takes the list from its own settings only.
+CODEX_SCOPES='scopes = ["profile", "email"]'
+# Whether the server in Codex's settings carries that list: one added by an earlier version of this script does not.
+codex_scoped() {
+  awk -v want="$CODEX_SCOPES" '
+    /^[[:space:]]*\[/ { inside = ($0 ~ /^[[:space:]]*\[mcp_servers\.orvind\][[:space:]]*$/) }
+    inside && index($0, want) { found = 1 }
+    END { exit found ? 0 : 1 }' "$CODEX_FILE" 2>/dev/null
+}
 codex_status() {
-  if codex_has; then say "  Codex: Orvind server added$(skills_in "$CODEX_SKILLS" && echo ', skills installed' || echo ', skills missing')."
+  if codex_has && ! codex_scoped; then say "  Codex: Orvind server added by an earlier setup, which cannot sign in. Run the setup again."
+  elif codex_has; then say "  Codex: Orvind server added$(skills_in "$CODEX_SKILLS" && echo ', skills installed' || echo ', skills missing')."
   elif codex_block; then say "  Codex: $CODEX_FILE has an orvind server, but this Codex does not read it. Update Codex."
   else say "  Codex: not set up."; fi
 }
 codex_setup() {
+  # A server added without the sign-in list cannot be signed in to, so it is taken out and added again below.
+  if codex_has && ! codex_scoped; then codex mcp remove orvind >/dev/null 2>&1 || true; fi
   if ! codex_has; then
     if codex_block; then
       say "  Codex: $CODEX_FILE already has an orvind server, but this Codex does not read it. Update Codex, then run this again."
@@ -157,14 +170,14 @@ codex_setup() {
       before="$(mktemp)" || return 1
       cp "$CODEX_FILE" "$before" 2>/dev/null || { rm -f "$before"; say "  Codex: $CODEX_FILE could not be read, so it was left as it is."; return 1; }
     fi
-    if ! printf '\n[mcp_servers.orvind]\nurl = "%s"\n' "$SERVER_URL" >> "$CODEX_FILE"; then
+    if ! printf '\n[mcp_servers.orvind]\nurl = "%s"\n%s\n' "$SERVER_URL" "$CODEX_SCOPES" >> "$CODEX_FILE"; then
       [ -z "$before" ] || rm -f "$before"
       say "  Codex: $CODEX_FILE could not be written, so it was left as it is."
       return 1
     fi
     if ! codex_has; then
       if [ "$existed" -eq 1 ]; then cat "$before" > "$CODEX_FILE"; rm -f "$before"; else rm -f "$CODEX_FILE"; fi
-      say "  Codex: could not add the server, and its settings were left as they were. Update Codex, then add it by hand: codex mcp add orvind --url $SERVER_URL"
+      say "  Codex: could not add the server, and its settings were left as they were. Update Codex, then add it by hand: codex mcp add orvind --url $SERVER_URL, and sign in with: codex mcp login orvind --scopes profile,email"
       return 1
     fi
     [ -z "$before" ] || rm -f "$before"

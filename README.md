@@ -52,8 +52,10 @@ Then run `/mcp`, choose `orvind` and sign in. The skills are available as `/orvi
 
 ```bash
 codex mcp add orvind --url https://mcp.orvind.com
-codex mcp login orvind
+codex mcp login orvind --scopes profile,email
 ```
+
+The `--scopes` part matters: without it Codex asks for more than Orvind's sign-in gives, and the sign-in fails.
 
 For the skills, copy the two folders under [`skills/`](skills) into `~/.codex/skills/`.
 

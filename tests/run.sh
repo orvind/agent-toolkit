@@ -36,12 +36,21 @@ setup --yes
 ok "exits 0" '[ "$CODE" -eq 0 ]'
 ok "adds the server once" '[ "$(blocks "$HOME/.codex/config.toml")" = 1 ]'
 ok "installs both skills" '[ -f "$HOME/.codex/skills/orvind-playables/SKILL.md" ] && [ -f "$HOME/.codex/skills/orvind-playground/SKILL.md" ]'
+ok "tells Codex what to ask for at sign-in, without openid" 'grep -q "^scopes = \[\"profile\", \"email\"\]$" "$HOME/.codex/config.toml" && ! grep -q openid "$HOME/.codex/config.toml"'
 setup --yes
-ok "a second run adds nothing" '[ "$(blocks "$HOME/.codex/config.toml")" = 1 ]'
+ok "a second run adds nothing" '[ "$(blocks "$HOME/.codex/config.toml")" = 1 ] && [ "$(grep -c "^scopes" "$HOME/.codex/config.toml")" = 1 ]'
 setup --remove
 ok "remove exits 0" '[ "$CODE" -eq 0 ]'
 ok "remove takes the server out" '[ "$(blocks "$HOME/.codex/config.toml")" = 0 ]'
 ok "remove takes the skills out" '[ ! -e "$HOME/.codex/skills/orvind-playables" ] && [ ! -e "$HOME/.codex/skills/orvind-playground" ]'
+
+fresh codex-earlier-setup codex
+mkdir -p "$HOME/.codex"; printf 'model = "x"\n\n[mcp_servers.orvind]\nurl = "https://mcp.orvind.com"\n\n[mcp_servers.other]\nurl = "https://example.com"\nscopes = ["profile", "email"]\n' > "$HOME/.codex/config.toml"
+setup --status
+ok "status says an earlier setup cannot sign in" 'printf "%s" "$OUT" | grep -q "cannot sign in"'
+setup --yes
+ok "a server from an earlier setup gets the sign-in list" '[ "$(blocks "$HOME/.codex/config.toml")" = 1 ] && [ "$(grep -c "^scopes" "$HOME/.codex/config.toml")" = 2 ]'
+ok "the other server and settings are kept" 'grep -q "^model = \"x\"" "$HOME/.codex/config.toml" && grep -q "mcp_servers.other" "$HOME/.codex/config.toml"'
 
 fresh codex-old codex
 export STUB_CODEX_OLD=1

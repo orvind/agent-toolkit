@@ -13,7 +13,7 @@ Orvind makes playable ads. The Playground is where a game is changed by describi
 The Orvind tools need a sign-in. If they are missing or a call says to authenticate:
 
 - Claude Code: run `/mcp`, choose `orvind`, and authenticate. A browser page titled "Connect … to Orvind?" opens; the user checks it shows their own account and clicks Connect.
-- Codex: `codex mcp login orvind`.
+- Codex: `codex mcp login orvind --scopes profile,email`.
 - Cursor: open Settings, MCP, and sign in on the `orvind` server.
 
 The agent then acts as the user's Orvind account. Never ask the user for a password, token or code.
