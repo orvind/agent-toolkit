@@ -8,6 +8,7 @@
 #
 # It exists because 0.3.0 and 0.3.1 were published with an empty .mcp.json: the plugin installed, its version was
 # right, and it had no server. Only looking at the installed result shows that.
+# shellcheck disable=SC2034  # code, plugins, servers and the like are read inside the quoted checks that ok() evaluates.
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
