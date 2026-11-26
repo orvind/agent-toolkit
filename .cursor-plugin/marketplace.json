@@ -1,0 +1,16 @@
+{
+  "name": "orvind",
+  "owner": {
+    "name": "Orvind"
+  },
+  "metadata": {
+    "description": "Orvind plugins for Cursor"
+  },
+  "plugins": [
+    {
+      "name": "orvind",
+      "source": "./",
+      "description": "Work in Orvind's Playground from your agent."
+    }
+  ]
+}

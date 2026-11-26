@@ -1,0 +1,14 @@
+{
+  "name": "orvind",
+  "owner": {
+    "name": "Orvind",
+    "url": "https://orvind.com"
+  },
+  "description": "Orvind plugins for Claude Code",
+  "plugins": [
+    {
+      "name": "orvind",
+      "source": "./"
+    }
+  ]
+}

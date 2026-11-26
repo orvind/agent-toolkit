@@ -1,0 +1,16 @@
+{
+  "name": "orvind",
+  "displayName": "Orvind",
+  "version": "0.1.0",
+  "description": "Work in Orvind's Playground from Cursor: browse campaigns, versions and playables, ask about a game, plan and make changes, play the result and save it as a version.",
+  "author": {
+    "name": "Orvind"
+  },
+  "publisher": "Orvind",
+  "homepage": "https://orvind.com",
+  "repository": "https://github.com/orvind/agent-toolkit",
+  "license": "MIT",
+  "logo": "assets/orvind-icon.png",
+  "keywords": ["orvind", "playable ads", "playables", "playground", "campaigns", "mcp"],
+  "mcpServers": "./.mcp.json"
+}
