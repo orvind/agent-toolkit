@@ -124,9 +124,11 @@ claude_remove() {
   claude plugin marketplace remove orvind >/dev/null 2>&1 || true
   # The server this script adds on its own when the plugin cannot be installed. One under another name is the
   # person's own and is left alone.
-  if claude_server; then was=1; claude mcp remove orvind --scope user >/dev/null 2>&1 || claude mcp remove orvind >/dev/null 2>&1 || true; fi
+  # Only the person's own (user) server, and from the home folder: without a scope, run inside a project, the
+  # command would take "orvind" out of that project's .mcp.json instead.
+  if claude_server; then was=1; (cd "$HOME" 2>/dev/null && claude mcp remove orvind --scope user >/dev/null 2>&1) || true; fi
   if claude_plugin; then say "  Claude Code: the plugin could not be removed. Remove it by hand: claude plugin uninstall orvind@orvind"; return 1; fi
-  if claude_server; then say "  Claude Code: the Orvind server could not be removed. Remove it by hand: claude mcp remove orvind"; return 1; fi
+  if claude_server; then say "  Claude Code: the Orvind server could not be removed. Remove it by hand: claude mcp remove orvind --scope user"; return 1; fi
   if [ "$was" -eq 1 ]; then say "  Claude Code: Orvind removed."; else say "  Claude Code: Orvind was not set up."; fi
 }
 

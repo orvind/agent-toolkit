@@ -15,6 +15,10 @@ loaded = {}
 for name in manifests:
     try: loaded[name] = json.loads(pathlib.Path(name).read_text())
     except (OSError, ValueError) as error: problems.append(f"{name}: {error}")
+# The plugin's own server: without it the plugin installs with its skills and no Orvind tools.
+server = loaded.get(".mcp.json", {}).get("mcpServers", {}).get("orvind")
+if server != {"type": "http", "url": "https://mcp.orvind.com"}:
+    problems.append(f".mcp.json must define the orvind server at https://mcp.orvind.com, but has: {server}")
 versions = {name: loaded[name].get("version") for name in (".claude-plugin/plugin.json", ".cursor-plugin/plugin.json") if name in loaded}
 if len(set(versions.values())) != 1 or not all(re.fullmatch(r"\d+\.\d+\.\d+", str(v)) for v in versions.values()):
     problems.append(f"the plugin versions differ or are not x.y.z: {versions}")

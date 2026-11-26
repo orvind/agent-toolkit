@@ -13,6 +13,14 @@
    bash tests/run.sh
    ```
 
+   Then install it for real, in throwaway settings folders, and look at the result. This step is not optional: it is the only one that shows what a person ends up with, and CI cannot run it.
+
+   ```bash
+   bash tests/release-check.sh
+   ```
+
+   Before committing, read `git status` and the diff. Commit the files you changed by name, not everything with `git add -A`: a test run can change a file you were not working on.
+
 3. Move `release` to that commit and tag it:
 
    ```bash
@@ -24,8 +32,16 @@
    ```
 
 4. Create the GitHub release from the tag, with what changed for someone using the toolkit.
-5. Check the published command on a machine, or in throwaway settings folders: `curl -fsSL https://raw.githubusercontent.com/orvind/agent-toolkit/release/setup.sh | bash -s -- --status`
+5. Check what was published, the same way:
+
+   ```bash
+   bash tests/release-check.sh release
+   ```
+
+   If it fails, move `release` back to the earlier tag first (below), then fix.
 
 To take a release back, move `release` to the earlier tag: `git push --force origin v0.2.0^{commit}:release`.
+
+Never run a real `claude` or `codex` command from inside this folder while testing. This folder has its own `.mcp.json`, which is the plugin's server, and a command such as `claude mcp remove orvind` run here edits it. That is how 0.3.0 and 0.3.1 were published with no server. `tests/release-check.sh` works in a temporary folder for this reason, and `tests/check-repo.sh` fails when `.mcp.json` does not define the server.
 
 `tests/run.sh` runs the setup script against stand-in agents (`tests/stubs/`) in temporary home folders. Add a case there for anything the script gets wrong, before fixing it.

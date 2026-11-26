@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Lint the scripts
-        run: shellcheck --severity=warning setup.sh tests/run.sh tests/check-repo.sh tests/stubs/claude tests/stubs/codex
+        run: shellcheck --severity=warning setup.sh tests/run.sh tests/check-repo.sh tests/release-check.sh tests/stubs/claude tests/stubs/codex
       - name: Manifests, versions and skills agree
         run: bash tests/check-repo.sh
   setup:

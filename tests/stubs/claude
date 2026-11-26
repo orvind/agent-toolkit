@@ -21,6 +21,9 @@ case "${1:-} ${2:-} ${3:-}" in
   "plugin uninstall "*) rm -f "$S/plugin"; exit 0 ;;
   "mcp add "*) url="${*: -1}"; name="${*: -2:1}"; echo "$name: $url (HTTP) - ! Needs authentication" >> "$S/servers"; exit 0 ;;
   "mcp list "*) cat "$S/servers"; [ -f "$S/plugin" ] && echo "plugin:orvind:orvind: https://mcp.orvind.com (HTTP) - ! Needs authentication"; exit 0 ;;
-  "mcp remove "*) grep -q "^$3:" "$S/servers" || exit 1; grep -v "^$3:" "$S/servers" > "$S/servers.new" || true; mv "$S/servers.new" "$S/servers"; exit 0 ;;
+  "mcp remove "*)
+    # Without a scope the real command may edit the .mcp.json of the folder it runs in: the script must never do that.
+    case " $* " in *" --scope user "*) ;; *) echo "$*" >> "$S/unscoped-remove"; exit 64 ;; esac
+    grep -q "^$3:" "$S/servers" || exit 1; grep -v "^$3:" "$S/servers" > "$S/servers.new" || true; mv "$S/servers.new" "$S/servers"; exit 0 ;;
 esac
 echo "stub claude: unexpected: $*" >&2; exit 64

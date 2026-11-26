@@ -160,6 +160,7 @@ setup --status
 ok "status says it is there without the skills" 'printf "%s" "$OUT" | grep -q "on its own"'
 setup --remove
 ok "remove takes that server out too" '! grep -q "^orvind:" "$STUB_STATE/servers"'
+ok "remove never runs without a scope, which could edit a project's .mcp.json" '[ ! -e "$STUB_STATE/unscoped-remove" ]'
 ok "remove exits 0" '[ "$CODE" -eq 0 ]'
 
 fresh claude-own-server claude
